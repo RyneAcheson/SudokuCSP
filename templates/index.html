@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sudoku Solver</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Generates a 9x9 that takes input that will be used to generate solutions for the algorithms-->
+    <h1>Sudoku Solver</h1>
+    <form id="input">
+        <table>
+            {% for row in range(9) %}
+            <tr>
+                {% for col in range(9) %}
+                <td><input type="text" maxlength="1" size="1" name="cell-{{ row }}-{{ col }}"></td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+        <div>
+            <label><input type="checkbox" id="knights"> Apply Knight's Rule</label>
+        </div>
+        <button type="button" onclick="submitSudoku()">Solve Sudoku</button>
+    </form>
+    <h2>Results</h2>
+    <div id="results"></div>
+    <script>
+        function submitSudoku() {
+            // Collect inputs from the grid
+            var cells = document.querySelectorAll('input[type="text"]');
+            // Initialize an array representing the grid
+            var puzzle = [];
+            // Check if knights rule has been checked
+            var knights = document.getElementById('knights').checked;
+
+            // Collects values from the input and converts to a array representing
+            // a sudoku grid
+            for (var row = 0; row < 9; row++) {
+                puzzle[row] = [];
+                for (var col = 0; col < 9; col++) {
+                    puzzle[row].push(cells[9*row + col].value || '0');
+                }
+            }
+            fetch('/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({'puzzle': puzzle, 'knights': knights})
+            }).then(response => response.json())
+              .then(data => {
+                  var resultsArea = document.getElementById('results');
+                  resultsArea.innerHTML = '';
+                  // Results for the CSP, should print # moves and solved grid or print unable to solve if unsolvable
+                  if (data.csp_solved) {
+                        resultsArea.innerHTML += '<h3>AC-3/MRV/LCV: <br>(Moves: ' + data.csp_moves + '):</h3>'; 
+                        resultsArea.innerHTML += '<pre>' + data.csp_grid.map(row => row.join(' ')).join('\n') + '</pre>';
+                  } else {
+                        resultsArea.innerHTML += '<h3>Unable to find solution for CSP</h3>';
+                  }
+
+                  // Results for the BF alg. should print # moves and solved grid or print unable to solve if unsolvable.
+                  if (data.brute_solved) {
+                        resultsArea.innerHTML += '<h3>Brute Force: <br>(Moves: ' + data.brute_moves + '):</h3>';
+                        resultsArea.innerHTML += '<pre>' + data.brute_grid.map(row => row.join(' ')).join('\n') + '</pre>';
+                  } else {
+                        resultsArea.innerHTML += '<h3>Unable to find solution for BF</h3>';
+                  }
+
+              }).catch(error => {
+                  console.error('Error:', error);
+              });
+        }
+    </script>
+</body>
+</html>

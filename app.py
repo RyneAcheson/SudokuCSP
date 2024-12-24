@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import copy
-from SudokuCSP import SudokuCSP, BruteForceSudoku # type: ignore
+from SudokuCSP import SudokuCSP, BruteForceSudoku
 
 app = Flask(__name__)
 
